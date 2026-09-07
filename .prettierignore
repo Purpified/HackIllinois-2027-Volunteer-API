@@ -1,0 +1,5 @@
+dist
+coverage
+.vitest
+node_modules
+package-lock.json
