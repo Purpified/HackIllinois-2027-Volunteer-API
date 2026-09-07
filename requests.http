@@ -1,0 +1,53 @@
+### Volunteer Shift API: request collection.
+### Works with the VS Code "REST Client" extension or JetBrains HTTP Client. Start the API with
+### `npm run dev`, then click "Send Request" above any block. Copy ids from responses into the
+### variables below as you go.
+
+@base = http://localhost:3000
+@volunteerId = 000000000000000000000000
+
+### Health
+GET {{base}}/health
+
+### Create a volunteer
+POST {{base}}/volunteers
+Content-Type: application/json
+
+{
+  "name": "Ada Lovelace",
+  "email": "ada@illinois.edu",
+  "phone": "217-555-0101"
+}
+
+### Create a volunteer: duplicate email (expect 409 DUPLICATE_EMAIL)
+POST {{base}}/volunteers
+Content-Type: application/json
+
+{
+  "name": "Ada Again",
+  "email": "ADA@illinois.edu"
+}
+
+### Create a volunteer: validation failure (expect 400 VALIDATION_ERROR)
+POST {{base}}/volunteers
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "isActive": false
+}
+
+### List volunteers
+GET {{base}}/volunteers?page=1&limit=20
+
+### Find a volunteer by email (how a client learns its own id without auth)
+GET {{base}}/volunteers?email=ada@illinois.edu
+
+### Get one volunteer
+GET {{base}}/volunteers/{{volunteerId}}
+
+### Get one volunteer: malformed id (expect 400)
+GET {{base}}/volunteers/not-an-id
+
+### Unknown route (expect 404 ROUTE_NOT_FOUND)
+GET {{base}}/nope

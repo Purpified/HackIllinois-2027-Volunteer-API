@@ -17,7 +17,12 @@ if (process.env.NODE_ENV !== 'test') {
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-  MONGO_URI: z.string().min(1).optional(),
+  // Optional. An empty value (`MONGO_URI=` in .env, or a blank CI variable) counts as unset.
+  MONGO_URI: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
   EVENT_START: z.iso.datetime({ offset: true }).default('2027-02-26T17:00:00-06:00'),
 });
 
