@@ -51,3 +51,45 @@ GET {{base}}/volunteers/not-an-id
 
 ### Unknown route (expect 404 ROUTE_NOT_FOUND)
 GET {{base}}/nope
+
+### ---- Events -------------------------------------------------------------------------------
+@eventId = 000000000000000000000000
+
+### Create an event (times must carry a timezone offset or Z)
+POST {{base}}/events
+Content-Type: application/json
+
+{
+  "name": "Check-in and Opening Ceremony",
+  "description": "Badge pickup, swag, welcome talk",
+  "location": "Siebel Center atrium",
+  "startTime": "2027-02-26T17:00:00-06:00",
+  "endTime": "2027-02-26T20:00:00-06:00"
+}
+
+### Create an event: end before start (expect 400 naming endTime)
+POST {{base}}/events
+Content-Type: application/json
+
+{
+  "name": "Backwards",
+  "startTime": "2027-02-26T17:00:00-06:00",
+  "endTime": "2027-02-26T16:00:00-06:00"
+}
+
+### List events, sorted by start time
+GET {{base}}/events
+
+### List events overlapping a window
+GET {{base}}/events?from=2027-02-26T22:00:00Z&to=2027-02-27T06:00:00Z
+
+### Get one event
+GET {{base}}/events/{{eventId}}
+
+### Rename an event
+PATCH {{base}}/events/{{eventId}}
+Content-Type: application/json
+
+{
+  "name": "Opening Ceremony"
+}

@@ -2,6 +2,7 @@ import express, { type Express } from 'express';
 import morgan from 'morgan';
 import { errorHandler } from './common/error-handler.ts';
 import { notFound } from './common/not-found.ts';
+import { eventRouter } from './services/event/event-router.ts';
 import { healthRouter } from './services/health/health-router.ts';
 import { volunteerRouter } from './services/volunteer/volunteer-router.ts';
 
@@ -24,6 +25,7 @@ export function createApp(options: AppOptions = {}): Express {
 
   app.use('/health', healthRouter);
   app.use('/volunteers', volunteerRouter);
+  app.use('/events', eventRouter);
 
   // Nothing above matched.
   app.use(notFound);

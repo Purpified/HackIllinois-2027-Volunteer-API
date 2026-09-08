@@ -10,6 +10,8 @@ export const ERROR_CODES = [
   'PAYLOAD_TOO_LARGE',
   'UNSUPPORTED_MEDIA_TYPE',
   'ROUTE_NOT_FOUND',
+  // events
+  'EVENT_NOT_FOUND',
   // volunteers
   'VOLUNTEER_NOT_FOUND',
   'VOLUNTEER_INACTIVE',
