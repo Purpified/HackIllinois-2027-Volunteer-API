@@ -18,7 +18,8 @@ export function createApp(options: AppOptions = {}): Express {
   }
 
   // Parse JSON bodies into req.body. Without this, req.body is undefined in Express 5.
-  // Invalid JSON or a body over the limit throws, and the error handler answers 400 / 413.
+  // Invalid JSON or a body over the limit makes express.json() call next(err); the error
+  // handler then answers 400 / 413.
   app.use(express.json({ limit: '100kb' }));
 
   app.use('/health', healthRouter);

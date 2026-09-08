@@ -43,10 +43,21 @@ export function handle<S extends RequestSchemas>(
       if (!schema) {
         continue;
       }
+      // express.json() only parses `application/json`. A missing body, or one sent under
+      // another Content-Type, leaves req.body undefined; say so instead of "expected object".
+      if (location === 'body' && req.body === undefined) {
+        issues.push({
+          location,
+          path: '',
+          message: 'request body is missing or was not sent as Content-Type: application/json',
+        });
+        continue;
+      }
       const result = schema.safeParse(req[location]);
       if (result.success) {
         parsed[location] = result.data;
       } else {
+        // Collect every issue from every location so the client can fix them all at once.
         for (const issue of result.error.issues) {
           issues.push({ location, path: issue.path.map(String).join('.'), message: issue.message });
         }

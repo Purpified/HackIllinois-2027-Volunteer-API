@@ -5,8 +5,10 @@ export const ERROR_CODES = [
   // request shape
   'VALIDATION_ERROR',
   'INVALID_ID',
+  'BAD_REQUEST',
   'MALFORMED_JSON',
   'PAYLOAD_TOO_LARGE',
+  'UNSUPPORTED_MEDIA_TYPE',
   'ROUTE_NOT_FOUND',
   // volunteers
   'VOLUNTEER_NOT_FOUND',
@@ -30,8 +32,8 @@ export const ERROR_CODES = [
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
 // Thrown by services for expected failures ("that shift is full"). The error handler turns it
-// into `{ error: { code, message, details? } }` with the given HTTP status. Anything thrown that
-// is NOT an AppError is treated as a bug and becomes a 500.
+// into `{ error: { code, message, details? } }` with the given HTTP status. Errors the handler
+// does not recognize (see error-handler.ts for the ones it does) are treated as bugs: 500.
 export class AppError extends Error {
   readonly status: number;
   readonly code: ErrorCode;

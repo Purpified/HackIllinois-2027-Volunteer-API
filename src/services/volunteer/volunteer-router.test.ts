@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../../app.ts';
-import { UNKNOWN_ID, createVolunteer } from '../../../tests/factories.ts';
+import { UNKNOWN_ID, insertVolunteer } from '../../../tests/factories.ts';
 import { VolunteerModel } from './volunteer-model.ts';
 
 // FILE 5 OF 5: tests. Every test talks to the real app over HTTP (supertest) against a real,
@@ -64,6 +64,29 @@ describe('POST /volunteers', () => {
     expect(await VolunteerModel.countDocuments()).toBe(0);
   });
 
+  it('reports every problem at once instead of stopping at the first', async () => {
+    const res = await request(app)
+      .post('/volunteers')
+      .send({ email: 'nope', phone: '1' })
+      .expect(400);
+    const paths = res.body.error.details.issues.map((i: { path: string }) => i.path).sort();
+    expect(paths).toEqual(['email', 'name', 'phone']);
+  });
+
+  it('lets exactly one of several simultaneous signups with the same email through', async () => {
+    // The service does NOT check "does this email exist?" before inserting, because two
+    // requests can both pass that check. The unique index is the only thing that works here.
+    const attempts = Array.from({ length: 5 }, (_, i) =>
+      request(app)
+        .post('/volunteers')
+        .send({ name: `Racer ${i}`, email: 'racer@illinois.edu' }),
+    );
+    const responses = await Promise.all(attempts);
+    const statuses = responses.map((r) => r.status).sort();
+    expect(statuses).toEqual([201, 409, 409, 409, 409]);
+    expect(await VolunteerModel.countDocuments({ email: 'racer@illinois.edu' })).toBe(1);
+  });
+
   it('rejects a duplicate email with 409 DUPLICATE_EMAIL, even with different casing', async () => {
     await request(app).post('/volunteers').send(ADA).expect(201);
     const res = await request(app)
@@ -86,7 +109,7 @@ describe('GET /volunteers', () => {
 
   it('sorts by name and paginates with stable pages', async () => {
     for (const name of ['Grace', 'Ada', 'Linus', 'Ken', 'Barbara']) {
-      await createVolunteer({ name });
+      await insertVolunteer({ name });
     }
     const page1 = await request(app).get('/volunteers?limit=2&page=1').expect(200);
     const page2 = await request(app).get('/volunteers?limit=2&page=2').expect(200);
@@ -100,16 +123,16 @@ describe('GET /volunteers', () => {
   });
 
   it('looks up a volunteer by exact email, case-insensitively', async () => {
-    const ada = await createVolunteer({ email: 'ada@illinois.edu' });
-    await createVolunteer({ email: 'grace@illinois.edu' });
+    const ada = await insertVolunteer({ email: 'ada@illinois.edu' });
+    await insertVolunteer({ email: 'grace@illinois.edu' });
     const res = await request(app).get('/volunteers?email=ADA@illinois.edu').expect(200);
     expect(res.body.data).toHaveLength(1);
     expect(res.body.data[0].id).toBe(ada._id.toString());
   });
 
   it('filters by isActive', async () => {
-    await createVolunteer({ isActive: false });
-    await createVolunteer();
+    await insertVolunteer({ isActive: false });
+    await insertVolunteer();
     const res = await request(app).get('/volunteers?isActive=false').expect(200);
     expect(res.body.data).toHaveLength(1);
     expect(res.body.data[0].isActive).toBe(false);
@@ -121,6 +144,8 @@ describe('GET /volunteers', () => {
     ['page=0', 'page'],
     ['page=abc', 'page'],
     ['isActive=maybe', 'isActive'],
+    ['isActive=yes', 'isActive'],
+    ['email=', 'email'],
   ])('rejects ?%s with 400', async (queryString, field) => {
     const res = await request(app).get(`/volunteers?${queryString}`).expect(400);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
@@ -128,9 +153,20 @@ describe('GET /volunteers', () => {
   });
 });
 
+describe('GET /volunteers (unknown filter)', () => {
+  it('rejects a misspelled filter key instead of silently returning everything', async () => {
+    const res = await request(app).get('/volunteers?emial=ada@illinois.edu').expect(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    expect(res.body.error.details.issues[0]).toMatchObject({
+      location: 'query',
+      message: expect.stringContaining('emial'),
+    });
+  });
+});
+
 describe('GET /volunteers/:id', () => {
   it('returns the volunteer', async () => {
-    const ada = await createVolunteer({ name: 'Ada' });
+    const ada = await insertVolunteer({ name: 'Ada' });
     const res = await request(app).get(`/volunteers/${ada._id.toString()}`).expect(200);
     expect(res.body.data).toMatchObject({ id: ada._id.toString(), name: 'Ada' });
   });

@@ -8,11 +8,22 @@ import { Schema, model, type HydratedDocumentFromSchema, type InferSchemaType } 
 const volunteerSchema = new Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 100 },
-    // `lowercase` and `trim` normalize on save, so "  Ada@Illinois.EDU " is stored as
-    // "ada@illinois.edu". `unique` is NOT a validator: it tells MongoDB to build a unique index,
-    // and a duplicate insert fails with error code 11000 (handled in volunteer-service.ts).
-    email: { type: String, required: true, trim: true, lowercase: true, unique: true },
-    phone: { type: String, trim: true },
+    // `lowercase` and `trim` are setters: the value is normalized the moment it is assigned
+    // (so "  Ada@Illinois.EDU " becomes "ada@illinois.edu" before save) and again when a query
+    // filter is cast, which is why find({ email }) needs no lowercasing of its own.
+    // `unique` is NOT a validator: it tells MongoDB to build a unique index, and a duplicate
+    // insert fails with error code 11000 (handled in volunteer-service.ts).
+    // `match` mirrors the Zod email rule loosely, so a seed script cannot store garbage either.
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      unique: true,
+      maxlength: 254,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    },
+    phone: { type: String, trim: true, minlength: 7, maxlength: 20 },
     // Soft-delete flag. Signups reference volunteers by id, so physically deleting a volunteer
     // would orphan their signup history. Nothing sets this to false yet; the field costs nothing
     // and means a future "deactivate volunteer" endpoint needs no migration.

@@ -12,10 +12,11 @@ async function resolveMongo(): Promise<MongoTarget> {
     return { uri: config.MONGO_URI };
   }
   const { MongoMemoryServer } = await import('mongodb-memory-server');
-  const mongod = await MongoMemoryServer.create({ instance: { dbName: 'volunteer_api' } });
+  const mongod = await MongoMemoryServer.create();
   console.log('MONGO_URI is not set: started an in-memory MongoDB (data is lost on exit)');
   return {
-    uri: mongod.getUri(),
+    // The database name goes on the URI; MongoMemoryServer itself has no say in it.
+    uri: mongod.getUri('volunteer_api'),
     stop: async () => {
       await mongod.stop();
     },
@@ -36,9 +37,16 @@ async function main(): Promise<void> {
     process.exit(1);
   });
 
+  // Graceful shutdown: stop taking new connections, let in-flight requests finish, THEN drop
+  // the database connection (otherwise a request mid-handler fails with a 500). A hung socket
+  // must not keep the process alive forever, so there is a hard deadline.
   const shutdown = async (signal: string): Promise<void> => {
     console.log(`\n${signal} received: shutting down`);
-    server.close();
+    setTimeout(() => process.exit(1), 10_000).unref();
+    await new Promise<void>((resolve) => {
+      server.close(() => resolve());
+      server.closeIdleConnections();
+    });
     await disconnectDb();
     await mongo.stop?.();
     process.exit(0);

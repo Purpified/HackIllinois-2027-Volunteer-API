@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 
 export async function connectDb(uri: string): Promise<void> {
-  // Fail fast if the server is unreachable instead of buffering queries for 30 seconds.
+  // Fail fast if the server is unreachable: connect() rejects after 5 seconds instead of the
+  // driver's default 30-second server-selection timeout.
   await mongoose.connect(uri, { serverSelectionTimeoutMS: 5_000 });
 }
 
@@ -10,10 +11,12 @@ export async function disconnectDb(): Promise<void> {
 }
 
 // Make sure every index declared in a schema actually exists in MongoDB before we serve
-// requests. Mongoose creates indexes in the background by default, which means a unique index
-// might not exist yet the first time two requests race. Calling this at startup (and once in
-// the test harness) removes that window. Note: syncIndexes also drops indexes that are no
-// longer in the schema, which is what we want for a database we own.
+// requests. By default Mongoose starts building indexes when a model's connection opens and
+// does not wait for them, so a unique index might not exist yet the first time two requests
+// race. Awaiting this at startup (and once in the test harness) removes that window.
+// syncIndexes also drops indexes that are no longer declared in the schema; for a database this
+// app owns outright that is the behaviour we want (a shared production database would need a
+// migration step instead).
 export async function syncAllIndexes(): Promise<void> {
   await Promise.all(Object.values(mongoose.models).map((model) => model.syncIndexes()));
 }

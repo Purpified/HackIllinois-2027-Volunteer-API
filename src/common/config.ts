@@ -11,9 +11,9 @@ if (process.env.NODE_ENV !== 'test') {
   }
 }
 
-// The environment is untrusted input like any other, so it gets a Zod schema. A typo in
-// MONGO_URI fails here, at startup, with a readable message, instead of ten seconds later as
-// a Mongoose "buffering timed out" error in the middle of a demo.
+// The environment is untrusted input like any other, so it gets a Zod schema. A bad PORT or
+// EVENT_START fails here, at startup, with a readable message. (An unreachable MONGO_URI is
+// only detectable by connecting; connectDb() gives up after 5 seconds.)
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),

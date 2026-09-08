@@ -6,6 +6,7 @@ export default defineConfig({
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
     setupFiles: ['tests/setup.ts'],
     pool: 'forks',
+    restoreMocks: true,
     testTimeout: 20_000,
     // Starting an in-memory MongoDB per test file can take a few seconds.
     hookTimeout: 90_000,

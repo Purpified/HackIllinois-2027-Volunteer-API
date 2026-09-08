@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { paginationQuery } from '../../common/schemas.ts';
+import { paginationQuery, queryBoolean } from '../../common/schemas.ts';
 import { toIso } from '../../common/serializers.ts';
 import type { VolunteerDoc } from './volunteer-model.ts';
 
@@ -21,16 +21,17 @@ export type CreateVolunteerBody = z.infer<typeof createVolunteerBody>;
 
 export const listVolunteersQuery = paginationQuery.extend({
   // Exact-match lookup. With no authentication, this is how a client finds its own id.
-  email: z.string().trim().toLowerCase().optional(),
-  // Query strings are text; z.stringbool() understands "true" / "false".
-  isActive: z.stringbool().optional(),
+  email: z.string().trim().toLowerCase().min(1).optional(),
+  // Query strings are text; queryBoolean accepts exactly "true" or "false".
+  isActive: queryBoolean.optional(),
 });
 export type ListVolunteersQuery = z.infer<typeof listVolunteersQuery>;
 
 // ---- Responses -------------------------------------------------------------------------------
 
-// The public shape. `id` instead of Mongo's `_id`, no `__v`, dates as ISO strings. Keeping this
-// separate from the model means we can change storage without changing the API.
+// The public shape (DTO: "data transfer object", what goes over the wire). `id` instead of
+// Mongo's `_id`, no `__v`, dates as ISO strings. Keeping this separate from the model means
+// storage can change without changing the API.
 export type VolunteerDto = {
   id: string;
   name: string;

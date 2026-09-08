@@ -2,6 +2,8 @@
 // distinct record unless you override a field.
 import { VolunteerModel, type VolunteerDoc } from '../src/services/volunteer/volunteer-model.ts';
 
+// Named insertX (not createX) on purpose: these bypass the service layer and Zod, writing
+// straight to MongoDB, so they must never be mistaken for the real createVolunteer().
 let volunteerCounter = 0;
 
 export type VolunteerOverrides = Partial<{
@@ -11,7 +13,7 @@ export type VolunteerOverrides = Partial<{
   isActive: boolean;
 }>;
 
-export async function createVolunteer(overrides: VolunteerOverrides = {}): Promise<VolunteerDoc> {
+export async function insertVolunteer(overrides: VolunteerOverrides = {}): Promise<VolunteerDoc> {
   volunteerCounter += 1;
   return VolunteerModel.create({
     name: `Volunteer ${volunteerCounter}`,
