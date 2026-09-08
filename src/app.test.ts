@@ -12,7 +12,7 @@ describe('GET /health', () => {
   });
 });
 
-// Every failure, whatever produced it, must come back as { error: { code, message, details? } }.
+// Every failure must use the same envelope.
 describe('error envelope', () => {
   it('answers unknown routes with 404 ROUTE_NOT_FOUND', async () => {
     const res = await request(app).get('/definitely-not-a-route').expect(404);
@@ -75,7 +75,6 @@ describe('error envelope', () => {
   });
 
   it('turns an unexpected exception into 500 INTERNAL without leaking the stack', async () => {
-    // Simulate a bug deep in the stack: the database call itself blows up.
     vi.spyOn(VolunteerModel, 'findById').mockImplementation(() => {
       throw new Error('simulated database failure with a secret path /etc/app');
     });
@@ -87,7 +86,6 @@ describe('error envelope', () => {
     expect(res.body.error.message).toMatch(/Reference: [0-9a-f-]{36}$/);
     expect(JSON.stringify(res.body)).not.toContain('simulated');
     expect(JSON.stringify(res.body)).not.toContain('/etc/app');
-    // The full error was logged server-side with the same reference id.
     const reference = res.body.error.message.split('Reference: ')[1];
     expect(logged).toHaveBeenCalledWith(expect.stringContaining(reference), expect.any(Error));
   });

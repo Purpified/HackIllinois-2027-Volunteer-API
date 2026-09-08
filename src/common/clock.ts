@@ -1,4 +1,4 @@
-// Services that stamp times take a Clock so tests can freeze "now" instead of sleeping.
+// Injectable "now" so time-based rules are deterministic in tests.
 export type Clock = { now(): Date };
 
 export const systemClock: Clock = { now: () => new Date() };

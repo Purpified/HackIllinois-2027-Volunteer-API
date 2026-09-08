@@ -9,7 +9,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     env:
-      # mongodb-memory-server downloads a MongoDB binary on first install; cache it between runs.
+      # Cache the MongoDB binary that mongodb-memory-server downloads.
       MONGOMS_DOWNLOAD_DIR: /home/runner/.cache/mongodb-binaries
     steps:
       - uses: actions/checkout@v7

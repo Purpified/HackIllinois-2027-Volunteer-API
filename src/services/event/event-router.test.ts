@@ -4,8 +4,6 @@ import { createApp } from '../../app.ts';
 import { EVENT_START, UNKNOWN_ID, hoursFrom, insertEvent } from '../../../tests/factories.ts';
 import { EventModel } from './event-model.ts';
 
-// FILE 5 OF 5: tests, in the same shape as volunteer-router.test.ts.
-
 const app = createApp({ logging: false });
 
 const OPENING = {
@@ -67,7 +65,6 @@ describe('POST /events', () => {
   });
 
   it('is also guarded at the database layer for writers that skip HTTP', async () => {
-    // The seed script calls the model directly. The schema hook still refuses bad times.
     await expect(
       EventModel.create({
         name: 'Backwards',

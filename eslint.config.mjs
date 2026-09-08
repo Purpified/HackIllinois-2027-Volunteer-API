@@ -25,8 +25,7 @@ export default defineConfig([
     },
   },
   {
-    // Test files read `response.body`, which supertest types as `any`. Casting every
-    // assertion would add noise without adding safety, so the unsafe-* rules are off here.
+    // supertest types response.body as `any`; casting every assertion adds noise, not safety.
     files: ['**/*.test.ts', 'tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-member-access': 'off',

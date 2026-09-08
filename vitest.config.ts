@@ -8,7 +8,6 @@ export default defineConfig({
     pool: 'forks',
     restoreMocks: true,
     testTimeout: 20_000,
-    // Starting an in-memory MongoDB per test file can take a few seconds.
     hookTimeout: 90_000,
     coverage: {
       provider: 'v8',

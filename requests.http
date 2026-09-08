@@ -1,7 +1,5 @@
-### Volunteer Shift API: request collection.
-### Works with the VS Code "REST Client" extension or JetBrains HTTP Client. Start the API with
-### `npm run dev`, then click "Send Request" above any block. Copy ids from responses into the
-### variables below as you go.
+### Request collection for the VS Code REST Client / JetBrains HTTP Client.
+### Start the API with `npm run dev`, then send any block. Paste ids into the variables as you go.
 
 @base = http://localhost:3000
 @volunteerId = 000000000000000000000000

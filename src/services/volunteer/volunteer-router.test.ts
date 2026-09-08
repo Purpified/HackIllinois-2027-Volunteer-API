@@ -4,12 +4,6 @@ import { createApp } from '../../app.ts';
 import { UNKNOWN_ID, insertVolunteer } from '../../../tests/factories.ts';
 import { VolunteerModel } from './volunteer-model.ts';
 
-// FILE 5 OF 5: tests. Every test talks to the real app over HTTP (supertest) against a real,
-// in-memory MongoDB (tests/setup.ts). Each test starts with empty collections.
-//
-// The pattern for every endpoint: the happy path, then each way it can fail (400, 404, 409),
-// then a check that the database actually changed (or did not).
-
 const app = createApp({ logging: false });
 
 const ADA = { name: 'Ada Lovelace', email: 'ada@illinois.edu', phone: '217-555-0101' };
@@ -26,7 +20,6 @@ describe('POST /volunteers', () => {
     expect(res.body.data).not.toHaveProperty('__v');
     expect(res.headers.location).toBe(`/volunteers/${res.body.data.id}`);
 
-    // And it is really in the database.
     const stored = await VolunteerModel.findById(res.body.data.id);
     expect(stored?.email).toBe(ADA.email);
   });
@@ -74,8 +67,7 @@ describe('POST /volunteers', () => {
   });
 
   it('lets exactly one of several simultaneous signups with the same email through', async () => {
-    // The service does NOT check "does this email exist?" before inserting, because two
-    // requests can both pass that check. The unique index is the only thing that works here.
+    // Only the unique index can enforce this; a pre-check would let concurrent requests through.
     const attempts = Array.from({ length: 5 }, (_, i) =>
       request(app)
         .post('/volunteers')

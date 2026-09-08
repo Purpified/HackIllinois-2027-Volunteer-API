@@ -5,13 +5,9 @@ import { handle } from '../../common/validate.ts';
 import { createVolunteerBody, listVolunteersQuery, toVolunteerDto } from './volunteer-schemas.ts';
 import { createVolunteer, getVolunteerById, listVolunteers } from './volunteer-service.ts';
 
-// FILE 4 OF 5: the router. HTTP in, HTTP out, nothing else. Each route is:
-//   method + path -> handle({ which inputs to validate }, async (validated input, req, res) => ...)
-// The router is mounted at /volunteers in app.ts, so '/' here means POST /volunteers.
-
+// Mounted at /volunteers.
 export const volunteerRouter = Router();
 
-// POST /volunteers
 volunteerRouter.post(
   '/',
   handle({ body: createVolunteerBody }, async ({ body }, _req, res) => {
@@ -23,7 +19,6 @@ volunteerRouter.post(
   }),
 );
 
-// GET /volunteers?page=1&limit=20&email=...&isActive=true
 volunteerRouter.get(
   '/',
   handle({ query: listVolunteersQuery }, async ({ query }, _req, res) => {
@@ -35,7 +30,6 @@ volunteerRouter.get(
   }),
 );
 
-// GET /volunteers/:id
 volunteerRouter.get(
   '/:id',
   handle({ params: idParams }, async ({ params }, _req, res) => {

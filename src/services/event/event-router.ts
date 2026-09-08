@@ -5,13 +5,10 @@ import { handle } from '../../common/validate.ts';
 import { createEventBody, listEventsQuery, toEventDto, updateEventBody } from './event-schemas.ts';
 import { createEvent, getEventById, listEvents, updateEvent } from './event-service.ts';
 
-// FILE 4 OF 5: the router, mounted at /events in app.ts.
-// (The event's shifts and its volunteer roster live under /events/:id/... too, but those routes
-// belong to the shift and signup features, which declare them with full paths.)
-
+// Mounted at /events. An event's shifts and roster are declared by the shift and signup
+// features with full paths.
 export const eventRouter = Router();
 
-// POST /events
 eventRouter.post(
   '/',
   handle({ body: createEventBody }, async ({ body }, _req, res) => {
@@ -23,7 +20,6 @@ eventRouter.post(
   }),
 );
 
-// GET /events?from=...&to=...&page=1&limit=20
 eventRouter.get(
   '/',
   handle({ query: listEventsQuery }, async ({ query }, _req, res) => {
@@ -35,7 +31,6 @@ eventRouter.get(
   }),
 );
 
-// GET /events/:id
 eventRouter.get(
   '/:id',
   handle({ params: idParams }, async ({ params }, _req, res) => {
@@ -44,7 +39,6 @@ eventRouter.get(
   }),
 );
 
-// PATCH /events/:id  (two validated inputs: the id from the path and the partial body)
 eventRouter.patch(
   '/:id',
   handle({ params: idParams, body: updateEventBody }, async ({ params, body }, _req, res) => {

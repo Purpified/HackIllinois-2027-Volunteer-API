@@ -1,23 +1,20 @@
 import * as z from 'zod';
 
-// Read a .env file if there is one. This is Node's built-in loader (no dotenv package).
-// Values already present in the real environment win over the file. Tests skip it so a
-// developer's local .env can never leak into the test database.
+// Node's built-in .env loader (real env vars win). Skipped under test so a local .env can never
+// reach the test database.
 if (process.env.NODE_ENV !== 'test') {
   try {
     process.loadEnvFile('.env');
   } catch {
-    // No .env file. Every setting has a default, so that is fine.
+    // No .env file; every setting has a default.
   }
 }
 
-// The environment is untrusted input like any other, so it gets a Zod schema. A bad PORT or
-// EVENT_START fails here, at startup, with a readable message. (An unreachable MONGO_URI is
-// only detectable by connecting; connectDb() gives up after 5 seconds.)
+// Validate the environment once at startup so a bad value fails with a readable message.
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-  // Optional. An empty value (`MONGO_URI=` in .env, or a blank CI variable) counts as unset.
+  // Empty counts as unset.
   MONGO_URI: z
     .string()
     .trim()

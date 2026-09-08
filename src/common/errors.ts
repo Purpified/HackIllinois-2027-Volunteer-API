@@ -1,6 +1,4 @@
-// Every error the API can return has a stable, machine-readable code. Clients switch on the
-// code; humans read the message. Keeping the list in one place means the README's error table
-// and the tests can be checked against it.
+// Stable, machine-readable error codes. Clients switch on the code; humans read the message.
 export const ERROR_CODES = [
   // request shape
   'VALIDATION_ERROR',
@@ -33,9 +31,8 @@ export const ERROR_CODES = [
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
-// Thrown by services for expected failures ("that shift is full"). The error handler turns it
-// into `{ error: { code, message, details? } }` with the given HTTP status. Errors the handler
-// does not recognize (see error-handler.ts for the ones it does) are treated as bugs: 500.
+// Thrown by services for expected failures. The error handler maps it to
+// `{ error: { code, message, details? } }` with the given status. Unrecognized errors are 500s.
 export class AppError extends Error {
   readonly status: number;
   readonly code: ErrorCode;

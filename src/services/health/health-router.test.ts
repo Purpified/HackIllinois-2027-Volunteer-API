@@ -7,7 +7,6 @@ const app = createApp({ logging: false });
 
 describe('GET /health when the database is down', () => {
   it('answers 503 SERVICE_UNAVAILABLE in the error envelope', async () => {
-    // Pretend the connection dropped. readyState is a getter on the connection object.
     const state = vi
       .spyOn(mongoose.connection, 'readyState', 'get')
       .mockReturnValue(mongoose.ConnectionStates.disconnected);

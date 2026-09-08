@@ -8,8 +8,8 @@ import { volunteerRouter } from './services/volunteer/volunteer-router.ts';
 
 export type AppOptions = { logging?: boolean };
 
-// Builds the Express app without listening on a port. server.ts listens; tests hand the app
-// straight to supertest. Order matters: a request walks this list top to bottom.
+// Builds the app without listening; server.ts listens, tests use supertest.
+// Middleware order matters: a request walks this list top to bottom.
 export function createApp(options: AppOptions = {}): Express {
   const app = express();
   app.disable('x-powered-by');
@@ -18,18 +18,13 @@ export function createApp(options: AppOptions = {}): Express {
     app.use(morgan('dev'));
   }
 
-  // Parse JSON bodies into req.body. Without this, req.body is undefined in Express 5.
-  // Invalid JSON or a body over the limit makes express.json() call next(err); the error
-  // handler then answers 400 / 413.
   app.use(express.json({ limit: '100kb' }));
 
   app.use('/health', healthRouter);
   app.use('/volunteers', volunteerRouter);
   app.use('/events', eventRouter);
 
-  // Nothing above matched.
   app.use(notFound);
-  // Anything thrown, anywhere above, lands here. Must be registered last.
   app.use(errorHandler);
 
   return app;

@@ -4,9 +4,7 @@ import { connectDb, disconnectDb, syncAllIndexes } from './common/db.ts';
 
 type MongoTarget = { uri: string; stop?: () => Promise<void> };
 
-// With MONGO_URI unset, boot an in-memory MongoDB so `npm run dev` works on a machine with
-// nothing installed. It is a dev dependency, hence the dynamic import: production builds with
-// a real MONGO_URI never load it.
+// With MONGO_URI unset, run against an in-memory MongoDB so `npm run dev` needs no setup.
 async function resolveMongo(): Promise<MongoTarget> {
   if (config.MONGO_URI) {
     return { uri: config.MONGO_URI };
@@ -15,7 +13,6 @@ async function resolveMongo(): Promise<MongoTarget> {
   const mongod = await MongoMemoryServer.create();
   console.log('MONGO_URI is not set: started an in-memory MongoDB (data is lost on exit)');
   return {
-    // The database name goes on the URI; MongoMemoryServer itself has no say in it.
     uri: mongod.getUri('volunteer_api'),
     stop: async () => {
       await mongod.stop();
@@ -37,9 +34,7 @@ async function main(): Promise<void> {
     process.exit(1);
   });
 
-  // Graceful shutdown: stop taking new connections, let in-flight requests finish, THEN drop
-  // the database connection (otherwise a request mid-handler fails with a 500). A hung socket
-  // must not keep the process alive forever, so there is a hard deadline.
+  // Drain in-flight requests before disconnecting, with a hard deadline.
   const shutdown = async (signal: string): Promise<void> => {
     console.log(`\n${signal} received: shutting down`);
     setTimeout(() => process.exit(1), 10_000).unref();

@@ -1,10 +1,9 @@
-// Runs before every test file (see vitest.config.ts). Each file gets its own in-memory MongoDB,
-// so files can run in parallel without seeing each other's data.
+// Runs before every test file: each file gets its own in-memory MongoDB.
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { connectDb, disconnectDb, syncAllIndexes } from '../src/common/db.ts';
-// Importing the app registers every Mongoose model, so syncAllIndexes() below sees all of them.
+// Registers every model so syncAllIndexes() sees them all.
 import '../src/app.ts';
 
 let mongod: MongoMemoryServer;
@@ -12,14 +11,12 @@ let mongod: MongoMemoryServer;
 beforeAll(async () => {
   mongod = await MongoMemoryServer.create();
   await connectDb(mongod.getUri());
-  // Build the indexes now. Unique indexes are what make the duplicate-signup tests meaningful,
-  // and Mongoose otherwise builds them in the background.
+  // Build indexes up front; the duplicate tests depend on them existing.
   await syncAllIndexes();
 });
 
 afterEach(async () => {
-  // Clear data between tests but KEEP the collections. Dropping a collection drops its indexes
-  // too, and a duplicate test without its unique index passes for the wrong reason.
+  // deleteMany, not drop: dropping a collection drops its indexes too.
   await Promise.all(
     Object.values(mongoose.connection.collections).map((collection) => collection.deleteMany({})),
   );

@@ -1,16 +1,11 @@
-// Small helpers that put realistic documents in the database for tests. Each call makes a
-// distinct record unless you override a field.
-//
-// Named insertX (not createX) on purpose: these bypass the service layer and Zod, writing
-// straight to MongoDB, so they must never be mistaken for the real createVolunteer().
+// Test data helpers. Named insertX because they write straight to MongoDB, bypassing Zod.
 import { EventModel, type EventDoc } from '../src/services/event/event-model.ts';
 import { VolunteerModel, type VolunteerDoc } from '../src/services/volunteer/volunteer-model.ts';
 
-// A well-formed ObjectId that no document has. Useful for "exists but not found" tests.
+// A well-formed ObjectId that no document has.
 export const UNKNOWN_ID = '000000000000000000000000';
 
-// Friday 26 Feb 2027, 5pm Chicago time, as the UTC instant the database would store. Tests use
-// fixed instants rather than Date.now() so a failure is reproducible.
+// Fri 26 Feb 2027, 5pm Chicago, as the stored UTC instant. Fixed so failures are reproducible.
 export const EVENT_START = new Date('2027-02-26T23:00:00.000Z');
 
 export function hoursFrom(date: Date, hours: number): Date {
@@ -45,7 +40,7 @@ export type EventOverrides = Partial<{
   endTime: Date;
 }>;
 
-// Each event defaults to a three-hour block, four hours after the previous one.
+// Defaults to a three-hour block, four hours after the previous event.
 export async function insertEvent(overrides: EventOverrides = {}): Promise<EventDoc> {
   eventCounter += 1;
   const startTime = overrides.startTime ?? hoursFrom(EVENT_START, (eventCounter - 1) * 4);
