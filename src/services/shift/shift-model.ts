@@ -9,6 +9,9 @@ const shiftSchema = new Schema(
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },
     capacity: { type: Number, required: true, min: 1, max: 500 },
+    // Count of ACTIVE signups, denormalized so capacity is enforced with an atomic conditional
+    // update on this one document (see claimSeat). Maintained by the signup feature only.
+    signupCount: { type: Number, required: true, default: 0, min: 0 },
   },
   { timestamps: true },
 );

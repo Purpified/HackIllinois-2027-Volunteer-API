@@ -2,6 +2,7 @@
 import type { Types } from 'mongoose';
 import { EventModel, type EventDoc } from '../src/services/event/event-model.ts';
 import { ShiftModel, type ShiftDoc } from '../src/services/shift/shift-model.ts';
+import { SignupModel, type SignupDoc } from '../src/services/signup/signup-model.ts';
 import { VolunteerModel, type VolunteerDoc } from '../src/services/volunteer/volunteer-model.ts';
 
 // A well-formed ObjectId that no document has.
@@ -58,6 +59,7 @@ export type ShiftOverrides = Partial<{
   startTime: Date;
   endTime: Date;
   capacity: number;
+  signupCount: number;
 }>;
 
 // Defaults to a two-hour block; creates its own event unless an eventId is passed.
@@ -74,4 +76,18 @@ export async function insertShift(overrides: ShiftOverrides = {}): Promise<Shift
     startTime,
     endTime,
   });
+}
+
+export type SignupOverrides = Partial<{
+  shiftId: Types.ObjectId;
+  volunteerId: Types.ObjectId;
+  status: 'active' | 'cancelled';
+}>;
+
+// Creates its own shift and volunteer unless ids are passed. Writes the row directly WITHOUT
+// touching the shift's signupCount; tests that care about seats sign up through the API.
+export async function insertSignup(overrides: SignupOverrides = {}): Promise<SignupDoc> {
+  const shiftId = overrides.shiftId ?? (await insertShift())._id;
+  const volunteerId = overrides.volunteerId ?? (await insertVolunteer())._id;
+  return SignupModel.create({ ...overrides, shiftId, volunteerId });
 }

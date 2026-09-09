@@ -30,6 +30,18 @@ export async function getVolunteerById(id: string): Promise<VolunteerDoc> {
   return volunteer;
 }
 
+// The signup feature calls this before claiming a seat: signups are only created for
+// existing, active volunteers.
+export async function assertVolunteerActive(id: string): Promise<void> {
+  const volunteer = await VolunteerModel.findById(id);
+  if (!volunteer) {
+    throw new AppError(404, 'VOLUNTEER_NOT_FOUND', `No volunteer with id ${id}`);
+  }
+  if (!volunteer.isActive) {
+    throw new AppError(409, 'VOLUNTEER_INACTIVE', `Volunteer ${id} is inactive`);
+  }
+}
+
 export type VolunteerPage = { items: VolunteerDoc[]; total: number };
 
 export async function listVolunteers(query: ListVolunteersQuery): Promise<VolunteerPage> {

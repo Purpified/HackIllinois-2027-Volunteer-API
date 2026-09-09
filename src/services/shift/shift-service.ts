@@ -1,6 +1,7 @@
+import type { QueryFilter } from 'mongoose';
 import { AppError } from '../../common/errors.ts';
 import { assertEventExists } from '../event/event-service.ts';
-import { ShiftModel, type ShiftDoc } from './shift-model.ts';
+import { ShiftModel, type Shift, type ShiftDoc } from './shift-model.ts';
 import type { CreateShiftBody, ListShiftsQuery, UpdateShiftBody } from './shift-schemas.ts';
 
 // The event check and the insert are not atomic (MongoDB has no foreign keys), but events
@@ -24,6 +25,23 @@ export async function assertShiftExists(id: string): Promise<void> {
   if (!exists) {
     throw new AppError(404, 'SHIFT_NOT_FOUND', `No shift with id ${id}`);
   }
+}
+
+// Atomically claim one seat: the filter matches only while a seat is free, so two racers for
+// the last seat serialize inside MongoDB and the loser gets false (which also covers a shift
+// that does not exist; the caller disambiguates).
+export async function claimSeat(shiftId: string): Promise<boolean> {
+  const claimed = await ShiftModel.findOneAndUpdate(
+    { _id: shiftId, $expr: { $lt: ['$signupCount', '$capacity'] } },
+    { $inc: { signupCount: 1 } },
+  );
+  return claimed !== null;
+}
+
+// Called by the signup feature when a signup is cancelled, or to compensate when the insert
+// after a successful claim fails.
+export async function releaseSeat(shiftId: string): Promise<void> {
+  await ShiftModel.updateOne({ _id: shiftId }, { $inc: { signupCount: -1 } });
 }
 
 export type ShiftPage = { items: ShiftDoc[]; total: number };
@@ -56,12 +74,27 @@ export async function updateShift(id: string, patch: UpdateShiftBody): Promise<S
     });
   }
 
-  const updated = await ShiftModel.findByIdAndUpdate(
-    id,
+  // When lowering capacity, the no-stranded-signups rule rides on the update itself so a
+  // concurrent signup cannot slip in between a pre-check and the write.
+  const filter: QueryFilter<Shift> = { _id: id };
+  if (patch.capacity !== undefined) {
+    filter.$expr = { $lte: ['$signupCount', patch.capacity] };
+  }
+  const updated = await ShiftModel.findOneAndUpdate(
+    filter,
     { $set: patch },
     { returnDocument: 'after', runValidators: true },
   );
   if (!updated) {
+    // The shift was fetched above and shifts cannot be deleted, so a miss means the capacity
+    // condition failed.
+    if (patch.capacity !== undefined) {
+      throw new AppError(
+        409,
+        'CAPACITY_BELOW_SIGNUPS',
+        `capacity ${patch.capacity} is below the shift's ${shift.signupCount} active signups`,
+      );
+    }
     throw new AppError(404, 'SHIFT_NOT_FOUND', `No shift with id ${id}`);
   }
   return updated;

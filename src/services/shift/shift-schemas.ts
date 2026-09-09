@@ -41,6 +41,7 @@ export type ShiftDto = {
   startTime: string;
   endTime: string;
   capacity: number;
+  signupCount: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -53,6 +54,7 @@ export function toShiftDto(doc: ShiftDoc): ShiftDto {
     startTime: toIso(doc.startTime),
     endTime: toIso(doc.endTime),
     capacity: doc.capacity,
+    signupCount: doc.signupCount,
     createdAt: toIso(doc.createdAt),
     updatedAt: toIso(doc.updatedAt),
   };

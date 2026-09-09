@@ -142,3 +142,37 @@ Content-Type: application/json
 {
   "capacity": 6
 }
+
+### ---- Signups ------------------------------------------------------------------------------
+@signupId = 000000000000000000000000
+
+### Sign a volunteer up for a shift
+POST {{base}}/shifts/{{shiftId}}/signups
+Content-Type: application/json
+
+{
+  "volunteerId": "{{volunteerId}}"
+}
+
+### Sign up again (expect 409 ALREADY_SIGNED_UP; on a full shift, 409 SHIFT_FULL wins)
+POST {{base}}/shifts/{{shiftId}}/signups
+Content-Type: application/json
+
+{
+  "volunteerId": "{{volunteerId}}"
+}
+
+### Roster for a shift (?status=active hides cancellations)
+GET {{base}}/shifts/{{shiftId}}/signups
+
+### A volunteer's schedule
+GET {{base}}/volunteers/{{volunteerId}}/signups
+
+### Get one signup
+GET {{base}}/signups/{{signupId}}
+
+### Cancel a signup (releases the seat; the row remains as history)
+POST {{base}}/signups/{{signupId}}/cancel
+
+### Cancel again (expect 409 INVALID_TRANSITION)
+POST {{base}}/signups/{{signupId}}/cancel

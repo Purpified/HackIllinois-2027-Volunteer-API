@@ -31,6 +31,7 @@ describe('POST /events/:eventId/shifts', () => {
       eventId: event._id.toString(),
       role: CHECK_IN.role,
       capacity: 4,
+      signupCount: 0,
       startTime: '2027-02-26T23:00:00.000Z',
       endTime: '2027-02-27T01:00:00.000Z',
     });
@@ -196,6 +197,21 @@ describe('PATCH /shifts/:id', () => {
       .send({ startTime: startTime.toISOString(), endTime: endTime.toISOString() })
       .expect(200);
     expect(res.body.data.startTime).toBe(startTime.toISOString());
+  });
+
+  it('rejects lowering capacity below the active signup count', async () => {
+    const shift = await insertShift({ capacity: 5, signupCount: 3 });
+    const res = await request(app)
+      .patch(`/shifts/${shift._id.toString()}`)
+      .send({ capacity: 2 })
+      .expect(409);
+    expect(res.body.error.code).toBe('CAPACITY_BELOW_SIGNUPS');
+    expect((await ShiftModel.findById(shift._id))?.capacity).toBe(5);
+  });
+
+  it('accepts lowering capacity to exactly the active signup count', async () => {
+    const shift = await insertShift({ capacity: 5, signupCount: 3 });
+    await request(app).patch(`/shifts/${shift._id.toString()}`).send({ capacity: 3 }).expect(200);
   });
 
   it.each([
