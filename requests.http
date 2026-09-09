@@ -1,5 +1,6 @@
 ### Request collection for the VS Code REST Client / JetBrains HTTP Client.
 ### Start the API with `npm run dev`, then send any block. Paste ids into the variables as you go.
+### On an empty database, dev startup seeds demo data and prints ids to paste into the variables.
 
 @base = http://localhost:3000
 @volunteerId = 000000000000000000000000

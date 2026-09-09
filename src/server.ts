@@ -1,6 +1,7 @@
 import { createApp } from './app.ts';
 import { config } from './common/config.ts';
 import { connectDb, disconnectDb, syncAllIndexes } from './common/db.ts';
+import { seedIfEmpty } from './seed.ts';
 
 type MongoTarget = { uri: string; stop?: () => Promise<void> };
 
@@ -24,6 +25,9 @@ async function main(): Promise<void> {
   const mongo = await resolveMongo();
   await connectDb(mongo.uri);
   await syncAllIndexes();
+  if (config.NODE_ENV === 'development') {
+    await seedIfEmpty();
+  }
 
   const app = createApp();
   const server = app.listen(config.PORT, () => {

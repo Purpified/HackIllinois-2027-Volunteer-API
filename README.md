@@ -15,6 +15,10 @@ npx vitest run src/services/...
 
 Requires Node 24 or newer. See `.env.example` for configuration.
 
+When the development database is empty, `npm run dev` seeds a demo weekend — volunteers,
+events, shifts, and signups anchored on `EVENT_START` — and prints ids ready to paste into
+`requests.http`.
+
 ## API
 
 Every success is `{ "data": ... }` (lists add `"meta": { page, limit, total, totalPages }`);
