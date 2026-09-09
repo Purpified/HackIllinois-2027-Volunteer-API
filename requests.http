@@ -91,3 +91,54 @@ Content-Type: application/json
 {
   "name": "Opening Ceremony"
 }
+
+### ---- Shifts -------------------------------------------------------------------------------
+@shiftId = 000000000000000000000000
+
+### Create a shift under an event (may start before the event: setup crews)
+POST {{base}}/events/{{eventId}}/shifts
+Content-Type: application/json
+
+{
+  "role": "Check-in desk",
+  "startTime": "2027-02-26T16:30:00-06:00",
+  "endTime": "2027-02-26T19:00:00-06:00",
+  "capacity": 4
+}
+
+### Create a shift: unknown event (expect 404 EVENT_NOT_FOUND)
+POST {{base}}/events/000000000000000000000000/shifts
+Content-Type: application/json
+
+{
+  "role": "Ghost shift",
+  "startTime": "2027-02-26T17:00:00-06:00",
+  "endTime": "2027-02-26T19:00:00-06:00",
+  "capacity": 2
+}
+
+### Create a shift: eventId belongs in the path, not the body (expect 400)
+POST {{base}}/events/{{eventId}}/shifts
+Content-Type: application/json
+
+{
+  "eventId": "000000000000000000000000",
+  "role": "Confused",
+  "startTime": "2027-02-26T17:00:00-06:00",
+  "endTime": "2027-02-26T19:00:00-06:00",
+  "capacity": 2
+}
+
+### List an event's shifts, sorted by start time
+GET {{base}}/events/{{eventId}}/shifts
+
+### Get one shift
+GET {{base}}/shifts/{{shiftId}}
+
+### Raise a shift's capacity
+PATCH {{base}}/shifts/{{shiftId}}
+Content-Type: application/json
+
+{
+  "capacity": 6
+}

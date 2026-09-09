@@ -1,5 +1,7 @@
 // Test data helpers. Named insertX because they write straight to MongoDB, bypassing Zod.
+import type { Types } from 'mongoose';
 import { EventModel, type EventDoc } from '../src/services/event/event-model.ts';
+import { ShiftModel, type ShiftDoc } from '../src/services/shift/shift-model.ts';
 import { VolunteerModel, type VolunteerDoc } from '../src/services/volunteer/volunteer-model.ts';
 
 // A well-formed ObjectId that no document has.
@@ -46,4 +48,30 @@ export async function insertEvent(overrides: EventOverrides = {}): Promise<Event
   const startTime = overrides.startTime ?? hoursFrom(EVENT_START, (eventCounter - 1) * 4);
   const endTime = overrides.endTime ?? hoursFrom(startTime, 3);
   return EventModel.create({ name: `Event ${eventCounter}`, ...overrides, startTime, endTime });
+}
+
+let shiftCounter = 0;
+
+export type ShiftOverrides = Partial<{
+  eventId: Types.ObjectId;
+  role: string;
+  startTime: Date;
+  endTime: Date;
+  capacity: number;
+}>;
+
+// Defaults to a two-hour block; creates its own event unless an eventId is passed.
+export async function insertShift(overrides: ShiftOverrides = {}): Promise<ShiftDoc> {
+  shiftCounter += 1;
+  const eventId = overrides.eventId ?? (await insertEvent())._id;
+  const startTime = overrides.startTime ?? hoursFrom(EVENT_START, (shiftCounter - 1) * 2);
+  const endTime = overrides.endTime ?? hoursFrom(startTime, 2);
+  return ShiftModel.create({
+    role: `Shift ${shiftCounter}`,
+    capacity: 4,
+    ...overrides,
+    eventId,
+    startTime,
+    endTime,
+  });
 }
