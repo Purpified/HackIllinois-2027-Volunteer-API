@@ -10,6 +10,7 @@ npm install        # first run also downloads a MongoDB binary (~100 MB) for loc
 npm run dev        # http://localhost:3000, in-memory MongoDB unless MONGO_URI is set
 npm test           # vitest against a fresh in-memory MongoDB per test file
 npm run verify     # typecheck + lint + format check + tests (what CI runs)
+npx vitest run src/services/...
 ```
 
 Requires Node 24 or newer. See `.env.example` for configuration.
